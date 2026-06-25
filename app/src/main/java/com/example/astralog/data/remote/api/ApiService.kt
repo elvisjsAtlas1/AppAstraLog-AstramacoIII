@@ -6,6 +6,7 @@ import com.example.astralog.data.remote.dto.LoginRequest
 import com.example.astralog.data.remote.response.AuthResponse
 import com.example.astralog.data.remote.response.CargaResponse
 import com.example.astralog.data.remote.response.PedidoResponse
+import com.example.astralog.data.remote.response.SpringPageResponse
 import com.example.astralog.data.remote.response.TransportistaResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -33,7 +34,8 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<CargaResponse?>
 
-    @PUT("cargas/{transportistaId}")
+    // 🔥 CORRECCIÓN AQUÍ: Cambiamos de @PUT a @POST para la creación de la carga inicial
+    @POST("cargas/{transportistaId}")
     suspend fun subirCargaActual(
         @Path("transportistaId") transportistaId: Long,
         @Body request: CargaRequest,
@@ -50,5 +52,5 @@ interface ApiService {
     @GET("pedidos/me")
     suspend fun getMisPedidos(
         @Header("Authorization") token: String
-    ): Response<List<PedidoResponse>>
+    ): Response<SpringPageResponse<PedidoResponse>>
 }

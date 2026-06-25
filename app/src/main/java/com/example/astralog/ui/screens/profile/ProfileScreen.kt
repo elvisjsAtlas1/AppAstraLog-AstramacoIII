@@ -3,16 +3,15 @@ package com.example.astralog.ui.screens.profile
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Person
@@ -21,8 +20,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +34,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.astralog.data.remote.response.DocumentoResponse
 import com.example.astralog.data.remote.response.TransportistaResponse
 
+// 🌌 Paleta de Colores Dark Glassmorphism Unificada
+private val SpaceBackground = Color(0xFF090D16)
+private val CardBackground = Color(0xFF0F172A).copy(alpha = 0.75f)
+private val NeonBlue = Color(0xFF3B82F6)
+private val NeonPurple = Color(0xFF7C3AED)
+private val TextMuted = Color(0xFF94A3B8)
+private val GlassBorder = Color.White.copy(alpha = 0.12f)
+
+// Colores de Estados Semánticos Satinados
+private val SuccessGreen = Color(0xFF10B981)
+private val SuccessBg = Color(0xFF10B981).copy(alpha = 0.15f)
+private val ErrorRed = Color(0xFFEF4444)
+private val ErrorBg = Color(0xFFEF4444).copy(alpha = 0.15f)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onLogout: () -> Unit,
@@ -47,26 +63,41 @@ fun ProfileScreen(
     }
 
     Scaffold(
+        containerColor = SpaceBackground, // Fondo oscuro profundo base
         topBar = {
-            @OptIn(ExperimentalMaterial3Api::class)
             TopAppBar(
-                title = { Text("Mi Perfil", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = { Text("Mi Perfil", fontWeight = FontWeight.Bold, fontSize = 22.sp, color = Color.White) },
                 actions = {
                     IconButton(onClick = { viewModel.logout(); onLogout() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Logout,
                             contentDescription = "Cerrar sesión",
-                            tint = MaterialTheme.colorScheme.error
+                            tint = ErrorRed
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = SpaceBackground,
+                    titleContentColor = Color.White
                 )
             )
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            // Aura de neón difuminada de fondo ambiental
+            Box(
+                modifier = Modifier
+                    .size(260.dp)
+                    .align(Alignment.BottomStart)
+                    .offset(x = (-60).dp, y = 60.dp)
+                    .blur(90.dp)
+                    .background(Brush.radialGradient(listOf(NeonPurple.copy(alpha = 0.15f), Color.Transparent)))
+            )
+
             when {
                 state.isLoading -> LoadingView()
                 state.error != null -> ErrorView(
@@ -91,36 +122,34 @@ private fun ProfileContentView(
     onOpenPedidos: () -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(22.dp)
     ) {
-        // 1. Encabezado de Usuario (Estilo Rappi con Avatar y Estado)
+        // 1. Tarjeta de Encabezado estilo Glassmorphism
         item {
             RappiProfileHeader(transportista = transportista)
         }
 
-        // 2. Acciones Rápidas en Grid/Mosaico de 2 Columnas
+        // 2. Operaciones con Mosaicos Degradados
         item {
             Column {
                 Text(
-                    text = "Operaciones",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = "Operaciones del Conductor",
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
+                    color = Color.White,
                     modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     GridActionButton(
                         text = "Gestionar Carga",
                         subtext = "Inventario y pesos",
                         icon = Icons.AutoMirrored.Filled.Assignment,
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        gradientColors = listOf(NeonBlue, NeonBlue.copy(alpha = 0.6f)),
                         modifier = Modifier.weight(1f),
                         onClick = onOpenCarga
                     )
@@ -128,8 +157,7 @@ private fun ProfileContentView(
                         text = "Ver Pedidos",
                         subtext = "Rutas asignadas",
                         icon = Icons.Default.LocalShipping,
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        gradientColors = listOf(NeonPurple, NeonPurple.copy(alpha = 0.6f)),
                         modifier = Modifier.weight(1f),
                         onClick = onOpenPedidos
                     )
@@ -137,7 +165,7 @@ private fun ProfileContentView(
             }
         }
 
-        // 3. Sección de Documentación del Vehículo/Conductor
+        // 3. Panel de Documentos Integrados
         item {
             DocumentosSection(documentos = transportista.documentos)
         }
@@ -146,30 +174,33 @@ private fun ProfileContentView(
 
 @Composable
 private fun RappiProfileHeader(transportista: TransportistaResponse) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(CardBackground)
+            .border(1.dp, GlassBorder, RoundedCornerShape(24.dp))
+            .padding(24.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Avatar circular estilizado
+                // Avatar circular translúcido neón
                 Box(
                     modifier = Modifier
-                        .size(64.dp)
+                        .size(60.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                        .background(NeonBlue.copy(alpha = 0.15f))
+                        .border(1.dp, NeonBlue.copy(alpha = 0.3f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        modifier = Modifier.size(30.dp),
+                        tint = NeonBlue
                     )
                 }
 
@@ -178,12 +209,12 @@ private fun RappiProfileHeader(transportista: TransportistaResponse) {
                 Column(modifier = Modifier.weight(1.0f)) {
                     Text(
                         text = "${transportista.nombre} ${transportista.apellidos}",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                    // Badge de Estado Activo/Inactivo
                     val isActivo = transportista.estado.equals("activo", ignoreCase = true)
                     StatusBadge(
                         text = transportista.estado.uppercase(),
@@ -193,15 +224,15 @@ private fun RappiProfileHeader(transportista: TransportistaResponse) {
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+            HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Datos técnicos clave organizados de manera más limpia
+            // Datos técnicos en cuadrícula limpia con tipografía espacial blanca
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 VehicleDataChip(label = "Placa", value = transportista.placa)
                 VehicleDataChip(label = "Capacidad", value = "${transportista.capacidad} kg")
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 VehicleDataChip(label = "Vehículo", value = transportista.vehiculoInfo)
                 VehicleDataChip(label = "DNI", value = transportista.dni)
@@ -215,42 +246,47 @@ private fun GridActionButton(
     text: String,
     subtext: String,
     icon: ImageVector,
-    containerColor: Color,
-    contentColor: Color,
-    modifier: Modifier = Modifier, // Corrección del error y valor por defecto correcto
+    gradientColors: List<Color>,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    Card(
-        // SonarQube exige que el parámetro 'modifier' sea el que reciba el clic y el tamaño
+    Box(
         modifier = modifier
-            .height(110.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+            .height(115.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Brush.linearGradient(colors = gradientColors))
+            .clickable { onClick() }
+            .padding(16.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null, // SonarQube aprueba null aquí si es meramente decorativo
-                tint = contentColor,
-                modifier = Modifier.size(28.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.White.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
             Column {
                 Text(
                     text = text,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
-                    color = contentColor
+                    color = Color.White
                 )
                 Text(
                     text = subtext,
                     fontSize = 11.sp,
-                    color = contentColor.copy(alpha = 0.7f)
+                    color = Color.White.copy(alpha = 0.75f)
                 )
             }
         }
@@ -264,13 +300,13 @@ private fun DocumentosSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "Mis Documentos",
-            style = MaterialTheme.typography.titleMedium,
+            text = "Documentación Obligatoria",
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
+            color = Color.White,
             modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
         )
 
-        // SonarQube: El flujo condicional principal es plano y fácil de leer
         if (documentos.isEmpty()) {
             EmptyDocumentosView()
         } else {
@@ -284,14 +320,14 @@ private fun DocumentosCardList(
     documentos: List<DocumentoResponse>,
     modifier: Modifier = Modifier
 ) {
-    // Regala de oro: El estado se eleva a la raíz del componente que maneja la lista
     var expandedDocumentoId by remember { mutableStateOf<Long?>(null) }
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .background(CardBackground)
+            .border(1.dp, GlassBorder, RoundedCornerShape(22.dp))
     ) {
         Column {
             documentos.forEachIndexed { index, documento ->
@@ -305,27 +341,17 @@ private fun DocumentosCardList(
                     }
                 )
 
-                // Encapsulamos el separador usando una función de extensión para limpiar la vista
-                DocumentDivider(index = index, totalCount = documentos.size)
+                if (index < documentos.size - 1) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = Color.White.copy(alpha = 0.06f)
+                    )
+                }
             }
         }
     }
 }
 
-@Composable
-private fun DocumentDivider(
-    index: Int,
-    totalCount: Int,
-    modifier: Modifier = Modifier
-) {
-    // SonarQube aprueba esta condición aislada porque no arrastra niveles de indentación superiores
-    if (index < totalCount - 1) {
-        HorizontalDivider(
-            modifier = modifier.padding(horizontal = 16.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
-    }
-}
 @Composable
 private fun DocumentoItemRow(
     documento: DocumentoResponse,
@@ -333,7 +359,6 @@ private fun DocumentoItemRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // 1. LÓGICA DE FORMATEO (Limpia guiones bajos y capitaliza de forma elegante)
     val nombreFormateado = remember(documento.tipoDocumento) {
         documento.tipoDocumento
             .replace("_", " ")
@@ -344,7 +369,6 @@ private fun DocumentoItemRow(
             }
     }
 
-    // Animación de rotación para la flecha indicadora de expansión
     val rotationAngle by animateFloatAsState(targetValue = if (isExpanded) 90f else 0f, label = "rotation")
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -352,39 +376,39 @@ private fun DocumentoItemRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .background(Color.White.copy(alpha = 0.05f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.QrCodeScanner,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = NeonBlue,
                     modifier = Modifier.size(20.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(14.dp))
 
-            // Optimizamos el tamaño y peso para evitar saltos de línea bruscos
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = nombreFormateado,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
+                    color = Color.White,
                     maxLines = 1
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = "Vence: ${documento.fechaVencimiento ?: "No aplica"}",
+                    text = "Vence: ${documento.fechaVencimiento ?: "Vigente (Fijo)"}",
                     fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    color = TextMuted
                 )
             }
 
@@ -395,70 +419,53 @@ private fun DocumentoItemRow(
                 isActive = documento.activo
             )
 
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
             Icon(
                 imageVector = Icons.Default.ChevronRight,
-                contentDescription = if (isExpanded) "Colapsar" else "Expandir",
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                contentDescription = null,
+                tint = TextMuted.copy(alpha = 0.5f),
                 modifier = Modifier.rotate(rotationAngle)
             )
         }
 
-        // 2. DESPLIEGUE DINÁMICO DE INFORMACIÓN ADICIONAL
         AnimatedVisibility(visible = isExpanded) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f))
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .background(Color.Black.copy(alpha = 0.2f))
+                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                RowExtraInfo(label = "Código / Valor de Documento", value = documento.valor)
-                RowExtraInfo(label = "Fecha de Emisión", value = documento.fechaEmision ?: "No registrada")
-                RowExtraInfo(label = "Estado en Base de Datos", value = if (documento.activo) "Verificado / Activo" else "Inactivo o Vencido")
+                RowExtraInfo(label = "Código / Registro de Documento", value = documento.valor)
+                RowExtraInfo(label = "Fecha de Emisión del Permiso", value = documento.fechaEmision ?: "No registrada")
+                RowExtraInfo(label = "Estado de Validación", value = if (documento.activo) "Aprobado / Vigente" else "No Vigente o Inactivo")
             }
         }
     }
 }
 
 @Composable
-private fun RowExtraInfo(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
+private fun RowExtraInfo(label: String, value: String) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-        )
-        Text(
-            text = value,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Text(text = label, fontSize = 12.sp, color = TextMuted)
+        Text(text = value, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.White)
     }
 }
 
 @Composable
 private fun StatusBadge(text: String, isActive: Boolean) {
-    val badgeColor = if (isActive) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
-    val backgroundColor = if (isActive) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
-
     Surface(
-        color = backgroundColor,
+        color = if (isActive) SuccessBg else ErrorBg,
         shape = RoundedCornerShape(8.dp)
     ) {
         Text(
             text = text,
-            color = badgeColor,
+            color = if (isActive) SuccessGreen else ErrorRed,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
@@ -468,28 +475,16 @@ private fun StatusBadge(text: String, isActive: Boolean) {
 
 @Composable
 private fun VehicleDataChip(label: String, value: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "$label: ",
-            fontSize = 13.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-        )
-        Text(
-            text = value,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(text = "$label: ", fontSize = 13.sp, color = TextMuted)
+        Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
     }
 }
 
-// Conservamos LoadingView y ErrorView limpias por consistencia arquitectónica
 @Composable
 private fun LoadingView() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(color = NeonBlue)
     }
 }
 
@@ -500,11 +495,19 @@ private fun ErrorView(error: String?, onRetry: () -> Unit, onLogout: () -> Unit)
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = error ?: "Error de conexión", color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onRetry, modifier = Modifier.fillMaxWidth()) { Text("Reintentar") }
-        Spacer(modifier = Modifier.height(8.dp))
-        TextButton(onClick = onLogout) { Text("Volver al login", color = MaterialTheme.colorScheme.error) }
+        Text(text = error ?: "Error de comunicación con el servidor", color = ErrorRed, textAlign = TextAlign.Center)
+        Spacer(modifier = Modifier.height(20.dp))
+        Button(
+            onClick = onRetry,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = NeonBlue)
+        ) {
+            Text("Reintentar Conexión", color = Color.White)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        TextButton(onClick = onLogout) {
+            Text("Volver al inicio", color = ErrorRed)
+        }
     }
 }
 
@@ -513,10 +516,12 @@ private fun EmptyDocumentosView() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(20.dp))
-            .padding(24.dp),
+            .clip(RoundedCornerShape(20.dp))
+            .background(CardBackground)
+            .border(1.dp, GlassBorder, RoundedCornerShape(20.dp))
+            .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text("No hay documentos registrados", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+        Text("No se detectaron documentos guardados", color = TextMuted)
     }
 }

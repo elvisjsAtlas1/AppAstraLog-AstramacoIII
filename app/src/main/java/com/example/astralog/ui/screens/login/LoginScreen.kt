@@ -1,16 +1,11 @@
 package com.example.astralog.ui.screens.login
 
-import androidx.compose.foundation.Image
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,28 +14,16 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -50,6 +33,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+// 🔮 Paleta de Colores Espaciales Unificada con el Web Login
+private val SpaceBackground = Color(0xFF090D16)
+private val CardBackground = Color(0xFF0F172A).copy(alpha = 0.75f)
+private val NeonBlue = Color(0xFF3B82F6)
+private val NeonPurple = Color(0xFF7C3AED)
+private val TextMuted = Color(0xFF94A3B8)
+
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -58,10 +48,23 @@ fun LoginScreen(
     val state by viewModel.uiState.collectAsState()
     var passwordVisible by remember { mutableStateOf(false) }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    // Contenedor principal con fondo espacial profundo
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(SpaceBackground),
+        contentAlignment = Alignment.Center
     ) {
+        // Efecto aura neón de fondo (Simula el desenfoque del login)
+        Box(
+            modifier = Modifier
+                .size(300.dp)
+                .align(Alignment.TopEnd)
+                .offset(x = 50.dp, y = (-50).dp)
+                .blur(80.dp)
+                .background(Brush.radialGradient(listOf(NeonBlue.copy(alpha = 0.2f), Color.Transparent)))
+        )
+
         LoginContent(
             state = state,
             passwordVisible = passwordVisible,
@@ -82,21 +85,27 @@ private fun LoginContent(
     onPasswordChange: (String) -> Unit,
     onLoginClick: () -> Unit
 ) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
+        LogoSection()
+
+        Spacer(modifier = Modifier.height(36.dp))
+
+        // 🔥 TARJETA DE CRISTAL (GLASSMORPHISM BOX)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .clip(RoundedCornerShape(24.dp))
+                .background(CardBackground)
+                .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(24.dp))
+                .padding(28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            LogoSection()
-
-            Spacer(modifier = Modifier.height(48.dp))
-
             UsernameTextField(
                 value = state.username,
                 onValueChange = onUsernameChange
@@ -111,19 +120,26 @@ private fun LoginContent(
                 onVisibilityToggle = onPasswordVisibilityToggle
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Animación fluida para errores (Evita alertas bruscas nativas)
+            AnimatedVisibility(
+                visible = state.error != null,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                ErrorMessage(error = state.error)
+            }
 
-            ErrorMessage(error = state.error)
+            Spacer(modifier = Modifier.height(8.dp))
 
             LoginButton(
                 isLoading = state.isLoading,
                 onClick = onLoginClick
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            RoleHint()
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        RoleHint()
     }
 }
 
@@ -131,23 +147,14 @@ private fun LoginContent(
 private fun LogoSection() {
     Box(
         modifier = Modifier
-            .size(100.dp)
+            .size(86.dp)
             .clip(CircleShape)
-            .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.secondary
-                    )
-                )
-            ),
+            .background(Brush.linearGradient(colors = listOf(NeonBlue, NeonPurple))),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "A",
-            fontSize = 48.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
+            text = "🚛",
+            fontSize = 38.sp
         )
     }
 
@@ -155,16 +162,18 @@ private fun LogoSection() {
 
     Text(
         text = "Astralog",
-        fontSize = 32.sp,
+        fontSize = 34.sp,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary
+        color = Color.White,
+        letterSpacing = 0.5.sp
     )
 
     Text(
         text = "Sistema de Gestión de Cargas",
         fontSize = 14.sp,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-        textAlign = TextAlign.Center
+        color = TextMuted,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(top = 4.dp)
     )
 }
 
@@ -181,17 +190,21 @@ private fun UsernameTextField(
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = "Usuario",
-                tint = MaterialTheme.colorScheme.primary
+                tint = NeonBlue
             )
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp),
+        modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            focusedContainerColor = Color(0xFF0F172A),
+            unfocusedContainerColor = Color(0xFF0F172A).copy(alpha = 0.5f),
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+            focusedBorderColor = NeonBlue,
+            unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+            focusedLabelColor = NeonBlue,
+            unfocusedLabelColor = TextMuted
         )
     )
 }
@@ -211,42 +224,34 @@ private fun PasswordTextField(
             Icon(
                 imageVector = Icons.Default.Lock,
                 contentDescription = "Contraseña",
-                tint = MaterialTheme.colorScheme.primary
+                tint = NeonBlue
             )
         },
         trailingIcon = {
-            PasswordVisibilityIcon(
-                isVisible = isPasswordVisible,
-                onToggle = onVisibilityToggle
-            )
+            IconButton(onClick = onVisibilityToggle) {
+                Icon(
+                    imageVector = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = "Ver contraseña",
+                    tint = TextMuted
+                )
+            }
         },
-        visualTransformation = getPasswordVisualTransformation(isPasswordVisible),
+        visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 24.dp),
+        modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            focusedContainerColor = Color(0xFF0F172A),
+            unfocusedContainerColor = Color(0xFF0F172A).copy(alpha = 0.5f),
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+            focusedBorderColor = NeonBlue,
+            unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+            focusedLabelColor = NeonBlue,
+            unfocusedLabelColor = TextMuted
         )
     )
-}
-
-@Composable
-private fun PasswordVisibilityIcon(
-    isVisible: Boolean,
-    onToggle: () -> Unit
-) {
-    val (icon, description) = getPasswordVisibilityIconAndDescription(isVisible)
-
-    IconButton(onClick = onToggle) {
-        Icon(
-            imageVector = icon,
-            contentDescription = description
-        )
-    }
 }
 
 @Composable
@@ -258,52 +263,47 @@ private fun LoginButton(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(12.dp),
+            .height(52.dp)
+            .background(
+                brush = Brush.linearGradient(colors = listOf(NeonBlue, NeonPurple)),
+                shape = RoundedCornerShape(14.dp)
+            ),
+        shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+            containerColor = Color.Transparent, // El degradado se maneja en el background modifier
+            disabledContainerColor = Color.Transparent
         ),
         enabled = !isLoading
     ) {
-        LoginButtonContent(isLoading = isLoading)
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = Color.White,
+                strokeWidth = 2.5.dp
+            )
+        } else {
+            Text(
+                text = "Ingresar al Sistema",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White
+            )
+        }
     }
-}
-
-@Composable
-private fun LoginButtonContent(isLoading: Boolean) {
-    when {
-        isLoading -> LoadingIndicator()
-        else -> LoginButtonText()
-    }
-}
-
-@Composable
-private fun LoadingIndicator() {
-    CircularProgressIndicator(
-        modifier = Modifier.size(24.dp),
-        color = Color.White
-    )
-}
-
-@Composable
-private fun LoginButtonText() {
-    Text(
-        text = "Ingresar",
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.White
-    )
 }
 
 @Composable
 private fun ErrorMessage(error: String?) {
     error?.let {
         Text(
-            text = it,
+            text = "⚠️ $it",
             color = MaterialTheme.colorScheme.error,
-            fontSize = 14.sp,
-            modifier = Modifier.padding(bottom = 16.dp)
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -311,22 +311,9 @@ private fun ErrorMessage(error: String?) {
 @Composable
 private fun RoleHint() {
     Text(
-        text = "Rol esperado: TRANSPORTISTA",
+        text = "Acceso restringido para personal: TRANSPORTISTA",
         fontSize = 12.sp,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+        color = TextMuted,
         textAlign = TextAlign.Center
     )
-}
-
-// Funciones puras (sin @Composable) para lógica de negocio
-private fun getPasswordVisualTransformation(isVisible: Boolean): VisualTransformation {
-    return if (isVisible) VisualTransformation.None else PasswordVisualTransformation()
-}
-
-private fun getPasswordVisibilityIconAndDescription(isVisible: Boolean): Pair<ImageVector, String> {
-    return if (isVisible) {
-        Pair(Icons.Default.VisibilityOff, "Ocultar contraseña")
-    } else {
-        Pair(Icons.Default.Visibility, "Mostrar contraseña")
-    }
 }

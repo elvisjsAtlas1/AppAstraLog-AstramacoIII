@@ -11,11 +11,14 @@ class PedidoRepository {
             val response = RetrofitProvider.api.getMisPedidos("Bearer $token")
 
             if (response.isSuccessful && response.body() != null) {
-                Resource.Success(response.body()!!)
+                // 🔥 EXTRAEMOS EL CONTENIDO: Pasamos la lista limpia (.content) que espera el Resource
+                val listaPedidos = response.body()!!.content
+                Resource.Success(listaPedidos)
             } else {
                 Resource.Error("No se pudieron obtener los pedidos")
             }
         } catch (e: Exception) {
+            // Esto capturará cualquier problema antes de que tumbe la app
             Resource.Error("Error de conexión: ${e.message}")
         }
     }
